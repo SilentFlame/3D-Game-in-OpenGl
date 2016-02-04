@@ -1,0 +1,8 @@
+To execute the code run the makefile
+
+
+If the makefile gives errors or doesn't executes the code, execute using the following command.
+g++ -o sample3D Sample_GL3_3D.cpp glad.c -lglfw3 -lGL -lm -lXrandr -lXi -lX11 -lXxf86vm -lpthread -lGLU -ldl
+
+then run it by 
+./sample3D
