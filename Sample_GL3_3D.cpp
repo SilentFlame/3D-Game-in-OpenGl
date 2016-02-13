@@ -14,8 +14,12 @@
 using namespace std;
 int Player_X=0, Player_Y=0;
 GLfloat Player_Z=0.0;
+int Life_Remaining=4;
 
 int flag[11][11]={{0 }};
+int flag_pits[10][10]={{0 }};
+int flag_obstacles[10][10]={{0 }};
+
 struct VAO {
     GLuint VertexArrayID;
     GLuint VertexBuffer;
@@ -209,17 +213,15 @@ void draw3DObject (struct VAO* vao)
 /**************************
  * Customizable functions *
  **************************/
-float cube_rotation =0;
 float player_rotation = 0;
-float triangle_rot_dir = 1;
 float rectangle_rot_dir = 1;
 float cube_rot_dir = 1;
 float player_rot_dir =1;
-bool triangle_rot_status = true;
-bool rectangle_rot_status = true;
-bool cube_rot_status = true;
 bool player_rot_status = true;
+float cube_rotation=0;
+float triangle_rot_dir =1;
 
+float posX, posY, posZ, UpX, UpY, UpZ, PointX, PointY, PointZ;
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
 void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -229,11 +231,18 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 	    if (action == GLFW_RELEASE) {
         switch (key) { 
             case GLFW_KEY_RIGHT:
-            	if((Player_X + 1) < 10){
+            	if(((Player_X + 1) < 10) && (flag_obstacles[Player_X+1][Player_Y]!=1) && (flag[Player_X+1][Player_Y]!=1)){
             		Player_X +=1;
-            		if(flag[Player_X][Player_Y]==1){
+            		if(flag_pits[Player_X][Player_Y]==1){
             			Player_X=0;
             			Player_Y=0;
+            			Life_Remaining--;
+            			cout << "Life Remaining:" ;
+            			cout << Life_Remaining << endl;
+            			if(Life_Remaining==0){
+            				cout << "Game Over" << endl;
+            				quit(window);
+            			}
             		}
             		else if(Player_X==9 && Player_Y==9){
             			cout << "Found U -_-" <<endl;
@@ -241,11 +250,18 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             	}
             	break;
 			case GLFW_KEY_LEFT:
-            	if(Player_X > 0 ){
+            	if((Player_X > 0 )  && (flag_obstacles[Player_X-1][Player_Y]!=1) && (flag[Player_X-1][Player_Y]!=1)){
             		Player_X -= 1;
-            		if(flag[Player_X][Player_Y]==1){
-            		Player_X=0;
+            		if((flag_pits[Player_X][Player_Y]==1)){
+            			Player_X=0;
             			Player_Y=0;
+            			Life_Remaining--;
+            			cout << "Life Remaining:" ;
+            			cout << Life_Remaining << endl;
+            			if(Life_Remaining==0){
+            				cout << "Game Over" << endl;
+            				quit(window);
+            			}
             		}
             		else if(Player_X==9 && Player_Y==9){
             			cout << "Found U -_-" <<endl;
@@ -253,11 +269,18 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             		}
             	break;           
             case GLFW_KEY_UP:
-            	if((Player_Y + 1) < 10){
+            	if(((Player_Y + 1) < 10) && (flag_obstacles[Player_X][Player_Y+1]!=1) && (flag[Player_X][Player_Y+1]!=1)){
             		Player_Y += 1;
-            		if(flag[Player_X][Player_Y]==1){
+            		if((flag_pits[Player_X][Player_Y]==1)){
             			Player_X=0;
             			Player_Y=0;
+            			Life_Remaining--;
+            			cout << "Life Remaining:" ;
+            			cout << Life_Remaining << endl;
+            			if(Life_Remaining==0){
+            				cout << "Game Over" << endl;
+            				quit(window);
+            			}
             		}
             		else if(Player_X==9 && Player_Y==9){
             			cout << "Found U -_-" <<endl;
@@ -265,25 +288,46 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             	}
             	break;
             case GLFW_KEY_DOWN:
-            	if((Player_Y ) > 0){
+            	if(((Player_Y ) > 0)  && (flag_obstacles[Player_X][Player_Y-1]!=1) && (flag[Player_X][Player_Y-1]!=1)){
             		Player_Y -= 1;
-            		if(flag[Player_X][Player_Y]==1){
+            		if((flag_pits[Player_X][Player_Y]==1)){
             			Player_X=0;
             			Player_Y=0;
+            			Life_Remaining--;
+            			cout << "Life Remaining:" ;
+            			cout << Life_Remaining << endl;
+            			if(Life_Remaining==0){
+            				cout << "Game Over" << endl;
+            				quit(window);
+            			}
             		}
             		else if(Player_X==9 && Player_Y==9){
             			cout << "Found U -_-" <<endl;
             		}
             	}
             	break;
-    		case GLFW_KEY_W:
-        		cameraPos += cameraSpeed * cameraFront;
-    		case GLFW_KEY_S:
-        		cameraPos -= cameraSpeed * cameraFront;
-    		case GLFW_KEY_A:
-        		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    		case GLFW_KEY_D:
-        		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+            case GLFW_KEY_T:
+            	posX=0.0;
+            	posY=0.0;
+            	posZ=6.0;
+            	PointX=0;
+            	PointY=0;
+            	PointZ=0;
+            	UpX=0;
+            	UpY=1.0;
+            	UpZ=0;
+            	break;
+            case GLFW_KEY_N:
+            	posX=1.0;
+				posY=-1.9;
+				posZ=5.0;
+				PointX=0.0;
+				PointY=0.0;
+				PointZ=0.0;
+				UpX=0.0;
+				UpY=1.0;
+				UpZ=0.0;
+            	break;
             default:
                 break;
         }
@@ -357,7 +401,7 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     Matrices.projection = glm::ortho(-8.0f, 8.0f, -8.0f, 8.0f, -20.0f, 20.0f);
 }
 
-VAO *triangle, *rectangle, *cube[10][10], *player;
+VAO *triangle, *rectangle, *cube[10][10], *player, *obstacles[10][10];
 
 // Creates the triangle object used in this sample code
 void createTriangle ()
@@ -562,60 +606,7 @@ void createCube(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat edgeL
 		centerX - halfLen, centerY + halfWid, centerZ + halfHei,
 
 	};
-/*
-	GLfloat vertex_color[] = {
-	//
-		0, 0, 0,
-		0, 0, 1,   
-		0, 1, 1,    
-		
-		0, 0, 0,   
-		0, 0, 1,  
-		0, 1, 1,   
-        
-        1, 0, 0,   
-        1, 0, 1,   
-        1, 1, 1,     
-        
-    //
-        1, 0, 0,   
-        1, 0, 1,   
-        1, 1, 1,   
-        
-        0, 0, 0,   
-		0, 0, 1,  
-		0, 1, 1,     
-        
-        0, 0, 0,
-		0, 0, 1,   
-		0, 1, 1,    
-        
-     //
-        0, 1, 0,   
-        0, 1, 1,   
-        1, 1, 1,     
-        
-        0, 1, 0,   
-        0, 1, 1,   
-        1, 1, 1,   
-        
-        0, 0, 0,   
-        0, 1, 0,   
-        1, 1, 0,     
-     //
-        0, 0, 0,   
-        0, 1, 0,   
-        1, 1, 0,   
-        
-        0, 1, 0,   
-        0, 1, 1,   
-        1, 1, 1,     
-        
-        0, 1, 0,   
-        0, 1, 1,   
-        1, 1, 1,
-    };
-*/
+
     GLfloat vertex_color[] = {
   //
     	0.0,0.0,0.0,
@@ -669,42 +660,179 @@ void createCube(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat edgeL
     cube[x][y] = create3DObject(GL_TRIANGLES, 36, vertex, vertex_color, GL_FILL);
 }
 
+// creating the obstacles
+void createObstacles(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat edgeLength, int x, int y){
+	GLfloat halfLen = edgeLength*0.6;
+	GLfloat halfWid = edgeLength*0.6;
+	GLfloat halfHei = edgeLength*1.0;
+	GLfloat vertex[] = {
+		//front face
+		centerX - halfLen, centerY + halfWid, centerZ + halfHei,
+		centerX + halfLen, centerY + halfWid, centerZ + halfHei,
+		centerX + halfLen, centerY - halfWid, centerZ + halfHei,
 
-// Creates the rectangle object used in this sample code
-void createRectangle ()
-{
-  // GL3 accepts only Triangles. Quads are not supported
-  static const GLfloat vertex_buffer_data [] = {
-    -1.2,-1,0, // vertex 1
-    1.2,-1,0, // vertex 2
-    1.2, 1,0, // vertex 3
+		centerX + halfLen, centerY - halfWid, centerZ + halfHei,
+		centerX - halfLen, centerY - halfWid, centerZ + halfHei,
+		centerX - halfLen, centerY + halfWid, centerZ + halfHei,
+	
+	//back face
+		centerX - halfLen, centerY + halfWid, centerZ - halfHei,
+		centerX + halfLen, centerY + halfWid, centerZ - halfHei,
+		centerX + halfLen, centerY - halfWid, centerZ - halfHei,
 
-    1.2, 1,0, // vertex 3
-    -1.2, 1,0, // vertex 4
-    -1.2,-1,0  // vertex 1
-  };
+		centerX + halfLen, centerY - halfWid, centerZ - halfHei,
+		centerX - halfLen, centerY - halfWid, centerZ - halfHei,
+		centerX - halfLen, centerY + halfWid, centerZ - halfHei,
 
-  static const GLfloat color_buffer_data [] = {
-    1,0,0, // color 1
-    0,0,1, // color 2
-    0,1,0, // color 3
+	//top face
+		centerX - halfLen, centerY + halfWid, centerZ + halfHei,
+		centerX - halfLen, centerY + halfWid, centerZ - halfHei,
+		centerX + halfLen, centerY + halfWid, centerZ - halfHei,
 
-    0,1,0, // color 3
-    0.3,0.3,0.3, // color 4
-    1,0,0  // color 1
-  };
+		centerX + halfLen, centerY + halfWid, centerZ - halfHei,
+		centerX + halfLen, centerY + halfWid, centerZ + halfHei,
+		centerX - halfLen, centerY + halfWid, centerZ + halfHei,
 
-  // create3DObject creates and returns a handle to a VAO that can be used later
-  rectangle = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_LINE);
+	//bottom face
+		centerX - halfLen, centerY - halfWid, centerZ - halfHei,
+		centerX + halfLen, centerY - halfWid, centerZ - halfHei,
+		centerX + halfLen, centerY - halfWid, centerZ + halfHei,
+
+		centerX + halfLen, centerY - halfWid, centerZ + halfHei,
+		centerX - halfLen, centerY - halfWid, centerZ + halfHei,
+		centerX - halfLen, centerY - halfWid, centerZ - halfHei,
+
+	//right face
+		centerX + halfLen, centerY + halfWid, centerZ + halfHei,
+		centerX + halfLen, centerY + halfWid, centerZ - halfHei,
+		centerX + halfLen, centerY - halfWid, centerZ - halfHei,
+		
+		centerX + halfLen, centerY - halfWid, centerZ - halfHei,
+		centerX + halfLen, centerY - halfWid, centerZ + halfHei,
+		centerX + halfLen, centerY + halfWid, centerZ + halfHei,
+
+	//left face
+		centerX - halfLen, centerY + halfWid, centerZ + halfHei,
+		centerX - halfLen, centerY + halfWid, centerZ - halfHei,
+		centerX - halfLen, centerY - halfWid, centerZ - halfHei,
+
+		centerX - halfLen, centerY - halfWid, centerZ - halfHei,
+		centerX - halfLen, centerY - halfWid, centerZ + halfHei,
+		centerX - halfLen, centerY + halfWid, centerZ + halfHei,
+
+	};
+
+    GLfloat vertex_color[] = {
+  //
+    	0.0,0.0,0.0,
+    	0.0,0.0,1.0,
+    	1.0,1.0,1.0,
+
+    	1.0,1.0,1.0,
+    	0.0,0.3,1.0,
+    	0.4,0.0,0.0,
+//
+    	1.0,0.0,0.0,
+    	1.0,0.6,1.0,
+    	1.0,1.0,1.0,
+
+    	1.0,1.0,1.0,
+    	1.0,0.7,1.0,
+    	1.0,0.0,0.0,
+//
+    	0.0,0.0,0.5,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.5,0.0,0.0,
+//
+    	0.0,1.0,0.0,
+    	0.0,1.0,1.0,
+    	1.0,1.0,1.0,
+
+    	1.0,1.0,1.0,
+    	0.0,1.0,1.0,
+    	0.0,1.0,1.0,
+//
+    	0.0,0.0,3.0,
+    	0.7,1.0,0.0,
+    	0.0,1.0,1.0,
+
+    	0.0,1.0,1.0,
+    	1.0,0.0,0.0,
+    	0.0,0.0,0.0,
+//
+    	0.0,0.0,0.7,
+    	0.0,0.0,1.0,
+    	0.0,1.0,1.0,
+
+    	0.1,1.0,1.0,
+    	0.3,0.3,1.0,
+    	0.0,0.9,0.0,
+    };
+    obstacles[x][y] = create3DObject(GL_TRIANGLES, 36, vertex, vertex_color, GL_FILL);
 }
+
+// creating random cubes to move and all.
+void random_cubes(){
+
+	int count_flag=17,i,j;
+ 	for(i=0;i<10;i++){
+ 		for(j=0;j<10;j++){
+ 			flag[i][j]=0;
+ 		}
+ 	}
+
+
+ 	while(count_flag>0){
+  		int X= rand()%10;
+  		int Y= rand()%10;
+ 		if(flag_obstacles[X][Y]!=1 && flag[X][Y]!=1 && !(X==0 && Y==0) && !(X==9 && Y==9) && (flag_pits[X][Y]!=1) && !(X==Player_X && Y==Player_Y)){
+ 			flag[X][Y]=1;
+ 			count_flag--;
+ 		}
+ 		else{
+ 			continue;
+ 		}
+ 	}
+}
+
+void random_pits(){
+	int count_pits=7,i,j;
+	for(i=0;i<10;i++){
+		for(j=0;j<10;j++){
+			flag_pits[i][j]=0;
+		}
+	}
+
+	while(count_pits>0){
+		int X=rand()%10;
+		int Y=rand()%10;
+		if(!(X==0 && Y==0) && !(X==9 && Y==9) && (flag_pits[X][Y]!=1) && (flag[X][Y]!=1)){
+			flag_pits[X][Y]=1;
+			count_pits--;
+		}
+		else{
+			continue;
+		}
+	}
+}
+
 
 float camera_rotation_angle = 90;
 float rectangle_rotation = 0;
 float triangle_rotation = 0;
+float obstacles_rotation = 0;
 
 
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
+float y=0;
+float grid_flag=1;
+
+
 void draw ()
 {
 	int i,j;
@@ -726,10 +854,12 @@ void draw ()
   // Compute Camera matrix (view)
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
-	 glm::vec3 cameraPos   = glm::vec3(1,-1.9,5.0);
-	glm::vec3 cameraFront = glm::vec3(0,0,0);
-	glm::vec3 cameraUp    = glm::vec3(0,1.2,0);
-
+	//  glm::vec3 cameraPos   = glm::vec3(1,-1.9,5.0);
+	// glm::vec3 cameraFront = glm::vec3(0,0,0);
+	// glm::vec3 cameraUp    = glm::vec3(0,1.2,0);
+	glm::vec3 cameraPos   = glm::vec3(posX, posY, posZ);
+	glm::vec3 cameraFront = glm::vec3(PointX, PointY, PointZ);
+	glm::vec3 cameraUp    = glm::vec3(UpX, UpY, UpZ);
 
  //  Matrices.view = glm::lookAt(glm::vec3(1,-1.9,5.0), glm::vec3(0,0,0), glm::vec3(0,1.2,0)); // Fixed camera for 2D (ortho) in XY plane
 	Matrices.view = glm::lookAt(cameraPos, cameraFront, cameraUp); // Fixed camera for 2D (ortho) in XY plane
@@ -737,110 +867,69 @@ void draw ()
   // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
   //  Don't change unless you are sure!!
   glm::mat4 VP = Matrices.projection * Matrices.view;
-
-  // Send our transformation to the currently bound shader, in the "MVP" uniform
-  // For each model you render, since the MVP will be different (at least the M part)
-  //  Don't change unless you are sure!!
-  glm::mat4 MVP;	// MVP = Projection * View * Model
-
-  // Load identity to model matrix
-  /*
-  Matrices.model = glm::mat4(1.0f);
-
-
-  glm::mat4 translateTriangle = glm::translate (glm::vec3(-2.0f, 0.0f, 0.0f)); // glTranslatef
-  glm::mat4 rotateTriangle = glm::rotate((float)(triangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
-  glm::mat4 triangleTransform = translateTriangle * rotateTriangle;
-  Matrices.model *= triangleTransform; 
-  MVP = VP * Matrices.model; // MVP = p * V * M
-
-  //  Don't change unless you are sure!!
-  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-  // draw3DObject draws the VAO given to it using current MVP matrix
-  draw3DObject(triangle);
-
-  // Pop matrix to undo transformations till last push matrix instead of recomputing model matrix
-  // glPopMatrix ();
-  Matrices.model = glm::mat4(1.0f);
-
-  glm::mat4 translateRectangle = glm::translate (glm::vec3(2, 0, 0));        // glTranslatef
-  glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
-  Matrices.model *= (translateRectangle * rotateRectangle);
-  MVP = VP * Matrices.model;
-  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-  // draw3DObject draws the VAO given to it using current MVP matrix
-  draw3DObject(rectangle);
-*/
-//for cube 
-  Matrices.model = glm::mat4(1.0f);
-
-  glm::mat4 translateCube = glm::translate (glm::vec3(0, 0, 0));        // glTranslatef
-  glm::mat4 rotateCube = glm::rotate((float)(cube_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
-  Matrices.model *= (translateCube * rotateCube);
-  MVP = VP * Matrices.model;
-  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  glm::mat4 MVP;	// MVP = Projection * View * Mode
   
 
-
+  
   for(i=0;i<10;i++){
   	for(j=0;j<10;j++){
-  //		if(!((i==2 && j==8) || (i==6 && j==2) || (i==9 && j==1) || (i==5 && j==3) || (i==3 && j==4) || (i==5 && j==7) || (i==0 && j==3) || (i==3 && j==1) || (i==6 && j==9) || (i==1 && j== 6)|| (i==8 && j==7) || (i==6 && j==5) || (i==7 && j==3))){
-	  		if(flag[i][j]!=1){
-	  			draw3DObject(cube[i][j]);
-	  		}
-	  
-  		}
+
+				  Matrices.model = glm::mat4(1.0f);
+
+				  glm::mat4 translateCube = glm::translate (glm::vec3(0, 0, flag[i][j]*y));        // glTranslatef
+				  glm::mat4 rotateCube = glm::rotate((float)(cube_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+				  Matrices.model *= (translateCube * rotateCube);
+				  MVP = VP * Matrices.model;
+				  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+	  			if(flag_pits[i][j]!=1){
+	  				draw3DObject(cube[i][j]);
+  				}
+  	}
   }
 
-  // int count = rand()%3 +2;
-  // for(i=0;i<count;i++){
-  // 	int x = rand()%10;
-  // 	int y = rand()%10;
-  // 	flag[x][y]=1;
+		  if(grid_flag==1){
+		  	y+=0.01;
+		  }
+		  else if(grid_flag==0){
+		  	y-=0.01;
+		  }
 
-  // }
-  
-  if(flag[Player_X][Player_Y]==1){
-	  	while(Player_Z>-2.0){
-		  	Matrices.model = glm::mat4(1.0f);
+		  if(y>=2.0){
+			grid_flag=0;
+		  }
+		  else if(y<0){
+		  	grid_flag=1;
+		  	random_cubes();
+		  	y=0;
+		}
 
-		  glm::mat4 translatePlayer = glm::translate (glm::vec3(-5.4+Player_X*1.22, -5.4+Player_Y*1.22, Player_Z));        // glTranslatef
-		  glm::mat4 rotatePlayer = glm::rotate((float)(player_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
-		  Matrices.model *= (translatePlayer * rotatePlayer);
-		  MVP = VP * Matrices.model;
-		  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-			draw3DObject(player);
-		  // Increment angles
-		  float increments = 1;
-		 	player_rotation = player_rotation + increments*player_rot_dir*player_rot_status;
-			Player_Z-=0.3;
+	for(i=0;i<10;i++){
+		for(j=0;j<10;j++){
+			if(flag_obstacles[i][j]==1){
+				Matrices.model = glm::mat4(1.0f);
+
+				glm::mat4 translateObstacles = glm::translate (glm::vec3(0.0,0.0, 0.0));        // glTranslatef
+				glm::mat4 rotateObstacles = glm::rotate((float)(obstacles_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+				Matrices.model *= (translateObstacles * rotateObstacles);
+				MVP = VP * Matrices.model;
+				glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+				draw3DObject(obstacles[i][j]);
 			}
 		}
-	else{
-		Matrices.model = glm::mat4(1.0f);
-
-		  glm::mat4 translatePlayer = glm::translate (glm::vec3(-5.4+Player_X*1.22, -5.4+Player_Y*1.22, 0.0));        // glTranslatef
-		  glm::mat4 rotatePlayer = glm::rotate((float)(player_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
-		  Matrices.model *= (translatePlayer * rotatePlayer);
-		  MVP = VP * Matrices.model;
-		  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-			draw3DObject(player);
-		  // Increment angles
-		  float increments = 1;
-		 	player_rotation = player_rotation + increments*player_rot_dir*player_rot_status;
-
-	  // draw3DObject draws the VAO given to it using current MVP matrix
 	}
+	
 
+	Matrices.model = glm::mat4(1.0f);
 
-  //camera_rotation_angle++; // Simulating camera rotation
-  //triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
-  //rectangle_rotation = rectangle_rotation + increments*rectangle_rot_dir*rectangle_rot_status;
-  
-//cube rotation.
-  //cube_rotation = cube_rotation + increments*cube_rot_dir*cube_rot_status;
+	glm::mat4 translatePlayer = glm::translate (glm::vec3(-5.4+Player_X*1.22, -5.4+Player_Y*1.22, 0.0));        // glTranslatef
+	glm::mat4 rotatePlayer = glm::rotate((float)(player_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+	Matrices.model *= (translatePlayer * rotatePlayer);
+	MVP = VP * Matrices.model;
+	glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+	draw3DObject(player);
+    float increments = 1;
+	player_rotation = player_rotation + increments*player_rot_dir*player_rot_status;
+
 }
 
 /* Initialise glfw window, I/O callbacks and the renderer to use */
@@ -897,28 +986,19 @@ GLFWwindow* initGLFW (int width, int height)
 
 /* Initialize the OpenGL rendering properties */
 /* Add all the models to be created here */
+
+
 void initGL (GLFWwindow* window, int width, int height)
 {
     /* Objects should be created before any other gl function and shaders */
 	// Create the models
-	createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-	createRectangle ();
+	// createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
+	// createRectangle ();
 	GLfloat x=-5.4f, y=-5.4f, z=0.0f;
 	// Player_X=x;
 	// Player_Y=y;
 	int i,j;
-	int count_flag=17;
- 	while(count_flag>0){
-  		int X= rand()%10;
-  		int Y= rand()%10;
- 		if(flag[X][Y]!=1 && (X!=0 && Y!=0) && (X!=9 && Y!=9)){
- 			flag[X][Y]=1;
- 			count_flag--;
- 		}
- 		else{
- 			continue;
- 		}
- 	}
+	random_pits();
   // draw3DObject draws the VAO given to it using current MVP matrix
  	
 	for(i=0;i<10;i++){
@@ -926,8 +1006,21 @@ void initGL (GLFWwindow* window, int width, int height)
 			createCube(x+1.22*i, y+j*1.22, z, 1.2f, i, j);
 		}
 	}
-
+	int count_obstacles=7;
+	while(count_obstacles>0){
+		int X=rand()%10;
+		int Y=rand()%10;
+		if(flag_obstacles[X][Y]!=1 && !(X==0 && Y==0) && !(X==9 && Y==9)){
+			createObstacles(-5.4+1.22*X, -5.4+1.22*Y, 3.0, 1.0, X, Y);
+			flag_obstacles[X][Y]=1;
+			count_obstacles--;
+		}
+		else{
+			continue;
+		}
+	}
 	createPlayer(0, 0, 4.62, 0.8, 0.8, 2.0);
+	random_cubes();
 
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
@@ -958,6 +1051,15 @@ int main (int argc, char** argv)
     GLFWwindow* window = initGLFW(width, height);
 
 	initGL (window, width, height);
+	posX=1.0;
+	posY=-1.9;
+	posZ=5.0;
+	PointX=0.0;
+	PointY=0.0;
+	PointZ=0.0;
+	UpX=0.0;
+	UpY=1.0;
+	UpZ=0.0;
 
     double last_update_time = glfwGetTime(), current_time;
 
@@ -974,11 +1076,11 @@ int main (int argc, char** argv)
         glfwPollEvents();
 
         // Control based on time (Time based transformation like 5 degrees rotation every 0.5s)
-        current_time = glfwGetTime(); // Time in seconds
-        if ((current_time - last_update_time) >= 0.5) { // atleast 0.5s elapsed since last frame
-            // do something every 0.5 seconds ..
-            last_update_time = current_time;
-        }
+        // current_time = glfwGetTime(); // Time in seconds
+        // if ((current_time - last_update_time) >= 0.5) { // atleast 0.5s elapsed since last frame
+        //     // do something every 0.5 seconds ..
+        //     last_update_time = current_time;
+        // }
     }
 
     glfwTerminate();
