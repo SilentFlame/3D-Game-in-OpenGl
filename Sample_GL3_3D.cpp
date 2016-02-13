@@ -12,9 +12,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 using namespace std;
-GLfloat Player_X=0.0, Player_Y=0.0;
+int Player_X=0, Player_Y=0;
+GLfloat Player_Z=0.0;
 
-
+int flag[11][11]={{0 }};
 struct VAO {
     GLuint VertexArrayID;
     GLuint VertexBuffer;
@@ -34,6 +35,10 @@ struct GLMatrices {
 } Matrices;
 
 GLuint programID;
+	glm::vec3 cameraPos;
+	glm::vec3 cameraFront;
+	glm::vec3 cameraUp;
+
 
 /* Function to load Shaders - Use it as it is */
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
@@ -220,38 +225,65 @@ bool player_rot_status = true;
 void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 {
      // Function is called first on GLFW_PRESS.
-
-    if (action == GLFW_RELEASE) {
-        switch (key) {
-            case GLFW_KEY_C:
-                rectangle_rot_status = !rectangle_rot_status;
-                break;
-            case GLFW_KEY_P:
-                triangle_rot_status = !triangle_rot_status;
-                break;
+            	 GLfloat cameraSpeed = 0.5f;
+	    if (action == GLFW_RELEASE) {
+        switch (key) { 
             case GLFW_KEY_RIGHT:
-            	if((Player_X + 1.2) < 5.4){
-            		Player_X += 1.2;
+            	if((Player_X + 1) < 10){
+            		Player_X +=1;
+            		if(flag[Player_X][Player_Y]==1){
+            			Player_X=0;
+            			Player_Y=0;
+            		}
+            		else if(Player_X==9 && Player_Y==9){
+            			cout << "Found U -_-" <<endl;
+            		}
             	}
             	break;
 			case GLFW_KEY_LEFT:
-            	if(Player_X > -5.4 ){
-            		Player_X -= 1.2;
+            	if(Player_X > 0 ){
+            		Player_X -= 1;
+            		if(flag[Player_X][Player_Y]==1){
+            		Player_X=0;
+            			Player_Y=0;
+            		}
+            		else if(Player_X==9 && Player_Y==9){
+            			cout << "Found U -_-" <<endl;
+            		}
             		}
             	break;           
-            case GLFW_KEY_X:
-            	cube_rot_status = !cube_rot_status;
-                break;
             case GLFW_KEY_UP:
-            	if((Player_Y + 1.2) < 5.4){
-            		Player_Y += 1.2;
+            	if((Player_Y + 1) < 10){
+            		Player_Y += 1;
+            		if(flag[Player_X][Player_Y]==1){
+            			Player_X=0;
+            			Player_Y=0;
+            		}
+            		else if(Player_X==9 && Player_Y==9){
+            			cout << "Found U -_-" <<endl;
+            		}
             	}
             	break;
             case GLFW_KEY_DOWN:
-            	if((Player_Y ) > -5.4){
-            		Player_Y -= 1.2;
+            	if((Player_Y ) > 0){
+            		Player_Y -= 1;
+            		if(flag[Player_X][Player_Y]==1){
+            			Player_X=0;
+            			Player_Y=0;
+            		}
+            		else if(Player_X==9 && Player_Y==9){
+            			cout << "Found U -_-" <<endl;
+            		}
             	}
             	break;
+    		case GLFW_KEY_W:
+        		cameraPos += cameraSpeed * cameraFront;
+    		case GLFW_KEY_S:
+        		cameraPos -= cameraSpeed * cameraFront;
+    		case GLFW_KEY_A:
+        		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    		case GLFW_KEY_D:
+        		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
             default:
                 break;
         }
@@ -686,15 +718,21 @@ void draw ()
   // Eye - Location of camera. Don't change unless you are sure!!
   glm::vec3 eye ( 5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f) );
   // Target - Where is the camera looking at.  Don't change unless you are sure!!
-  glm::vec3 target (0, 0, 0);
-  // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
-  glm::vec3 up (0, 1, 0);
+  // glm::vec3 target (0, 0, 0);
+  // // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
+  // glm::vec3 up (0, 1, 0);
 
 
   // Compute Camera matrix (view)
   // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
   //  Don't change unless you are sure!!
-  Matrices.view = glm::lookAt(glm::vec3(1,-1.9,5.0), glm::vec3(0,0,0), glm::vec3(0,1.2,0)); // Fixed camera for 2D (ortho) in XY plane
+	 glm::vec3 cameraPos   = glm::vec3(1,-1.9,5.0);
+	glm::vec3 cameraFront = glm::vec3(0,0,0);
+	glm::vec3 cameraUp    = glm::vec3(0,1.2,0);
+
+
+ //  Matrices.view = glm::lookAt(glm::vec3(1,-1.9,5.0), glm::vec3(0,0,0), glm::vec3(0,1.2,0)); // Fixed camera for 2D (ortho) in XY plane
+	Matrices.view = glm::lookAt(cameraPos, cameraFront, cameraUp); // Fixed camera for 2D (ortho) in XY plane
 
   // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
   //  Don't change unless you are sure!!
@@ -743,15 +781,17 @@ void draw ()
   Matrices.model *= (translateCube * rotateCube);
   MVP = VP * Matrices.model;
   glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+  
 
-  // draw3DObject draws the VAO given to it using current MVP matrix
+
   for(i=0;i<10;i++){
   	for(j=0;j<10;j++){
-  		int x= rand();
-  		if(!((i==2 && j==8) || (i==6 && j==2) || (i==9 && j==1) || (i==5 && j==3) || (i==3 && j==4) || (i==5 && j==7) || (i==0 && j==3) || (i==3 && j==1) || (i==6 && j==9) || (i==1 && j== 6)|| (i==8 && j==7) || (i==6 && j==5) || (i==7 && j==3))){
-  			draw3DObject(cube[i][j]);
+  //		if(!((i==2 && j==8) || (i==6 && j==2) || (i==9 && j==1) || (i==5 && j==3) || (i==3 && j==4) || (i==5 && j==7) || (i==0 && j==3) || (i==3 && j==1) || (i==6 && j==9) || (i==1 && j== 6)|| (i==8 && j==7) || (i==6 && j==5) || (i==7 && j==3))){
+	  		if(flag[i][j]!=1){
+	  			draw3DObject(cube[i][j]);
+	  		}
+	  
   		}
-  	}
   }
 
   // int count = rand()%3 +2;
@@ -762,19 +802,38 @@ void draw ()
 
   // }
   
-  Matrices.model = glm::mat4(1.0f);
+  if(flag[Player_X][Player_Y]==1){
+	  	while(Player_Z>-2.0){
+		  	Matrices.model = glm::mat4(1.0f);
 
-  glm::mat4 translatePlayer = glm::translate (glm::vec3(Player_X, Player_Y, 0.0));        // glTranslatef
-  glm::mat4 rotatePlayer = glm::rotate((float)(player_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
-  Matrices.model *= (translatePlayer * rotatePlayer);
-  MVP = VP * Matrices.model;
-  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+		  glm::mat4 translatePlayer = glm::translate (glm::vec3(-5.4+Player_X*1.22, -5.4+Player_Y*1.22, Player_Z));        // glTranslatef
+		  glm::mat4 rotatePlayer = glm::rotate((float)(player_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+		  Matrices.model *= (translatePlayer * rotatePlayer);
+		  MVP = VP * Matrices.model;
+		  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+			draw3DObject(player);
+		  // Increment angles
+		  float increments = 1;
+		 	player_rotation = player_rotation + increments*player_rot_dir*player_rot_status;
+			Player_Z-=0.3;
+			}
+		}
+	else{
+		Matrices.model = glm::mat4(1.0f);
 
-  // draw3DObject draws the VAO given to it using current MVP matrix
+		  glm::mat4 translatePlayer = glm::translate (glm::vec3(-5.4+Player_X*1.22, -5.4+Player_Y*1.22, 0.0));        // glTranslatef
+		  glm::mat4 rotatePlayer = glm::rotate((float)(player_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+		  Matrices.model *= (translatePlayer * rotatePlayer);
+		  MVP = VP * Matrices.model;
+		  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+			draw3DObject(player);
+		  // Increment angles
+		  float increments = 1;
+		 	player_rotation = player_rotation + increments*player_rot_dir*player_rot_status;
 
-	draw3DObject(player);
-  // Increment angles
-  float increments = 1;
+	  // draw3DObject draws the VAO given to it using current MVP matrix
+	}
+
 
   //camera_rotation_angle++; // Simulating camera rotation
   //triangle_rotation = triangle_rotation + increments*triangle_rot_dir*triangle_rot_status;
@@ -782,11 +841,13 @@ void draw ()
   
 //cube rotation.
   //cube_rotation = cube_rotation + increments*cube_rot_dir*cube_rot_status;
- 	player_rotation = player_rotation + increments*player_rot_dir*player_rot_status;
 }
 
 /* Initialise glfw window, I/O callbacks and the renderer to use */
 /* Nothing to Edit here */
+
+
+
 
 
 GLFWwindow* initGLFW (int width, int height)
@@ -797,13 +858,12 @@ GLFWwindow* initGLFW (int width, int height)
     if (!glfwInit()) {
         exit(EXIT_FAILURE);
     }
-
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(width, height, "Sample OpenGL 3.3 Application", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Find my Way Out", NULL, NULL);
 
     if (!window) {
         glfwTerminate();
@@ -812,7 +872,7 @@ GLFWwindow* initGLFW (int width, int height)
 
     glfwMakeContextCurrent(window);
     gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
-    glfwSwapInterval( 1 );
+    glfwSwapInterval( 0.2 );
 
     /* --- register callbacks with GLFW --- */
 
@@ -844,10 +904,23 @@ void initGL (GLFWwindow* window, int width, int height)
 	createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
 	createRectangle ();
 	GLfloat x=-5.4f, y=-5.4f, z=0.0f;
-	Player_X=x;
-	Player_Y=y;
+	// Player_X=x;
+	// Player_Y=y;
 	int i,j;
-	
+	int count_flag=17;
+ 	while(count_flag>0){
+  		int X= rand()%10;
+  		int Y= rand()%10;
+ 		if(flag[X][Y]!=1 && (X!=0 && Y!=0) && (X!=9 && Y!=9)){
+ 			flag[X][Y]=1;
+ 			count_flag--;
+ 		}
+ 		else{
+ 			continue;
+ 		}
+ 	}
+  // draw3DObject draws the VAO given to it using current MVP matrix
+ 	
 	for(i=0;i<10;i++){
 		for(j=0;j<10;j++){
 			createCube(x+1.22*i, y+j*1.22, z, 1.2f, i, j);
