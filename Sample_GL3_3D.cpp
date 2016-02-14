@@ -2,7 +2,6 @@
 #include <cmath>
 #include <fstream>
 #include <vector>
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cstdlib>
@@ -10,16 +9,26 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 using namespace std;
+
+int jump_flag=0, flag_up=1;
+float xDragStart;
 int Player_X=0, Player_Y=0;
 GLfloat Player_Z=0.0;
 int Life_Remaining=4;
-
+float width, height;
 int flag[11][11]={{0 }};
 int flag_pits[10][10]={{0 }};
 int flag_obstacles[10][10]={{0 }};
+float zoom=1;
+float angle=0;
+float deltaAngle = 0;
+int isDragging=0; 
 
+
+float cdx=0, cdy=0, cdz=0;
+float ldx=0, ldy=0, ldz=0;
+float udx=0, udy=0, udz=0;
 struct VAO {
     GLuint VertexArrayID;
     GLuint VertexBuffer;
@@ -45,7 +54,8 @@ GLuint programID;
 
 
 /* Function to load Shaders - Use it as it is */
-GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
+GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) 
+{
 
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -178,12 +188,12 @@ struct VAO* create3DObject (GLenum primitive_mode, int numVertices, const GLfloa
 struct VAO* create3DObject (GLenum primitive_mode, int numVertices, const GLfloat* vertex_buffer_data, const GLfloat red, const GLfloat green, const GLfloat blue, GLenum fill_mode=GL_FILL)
 {
     GLfloat* color_buffer_data = new GLfloat [3*numVertices];
-    for (int i=0; i<numVertices; i++) {
+    for (int i=0; i<numVertices; i++) 
+    {
         color_buffer_data [3*i] = red;
         color_buffer_data [3*i + 1] = green;
         color_buffer_data [3*i + 2] = blue;
     }
-
     return create3DObject(primitive_mode, numVertices, vertex_buffer_data, color_buffer_data, fill_mode);
 }
 
@@ -220,17 +230,54 @@ float player_rot_dir =1;
 bool player_rot_status = true;
 float cube_rotation=0;
 float triangle_rot_dir =1;
-
+int View_cam=0;
+int back_cam=0;
 float posX, posY, posZ, UpX, UpY, UpZ, PointX, PointY, PointZ;
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
+
+void playerCam()
+{
+	if(View_cam==1)
+	{
+		posX= -5.4+Player_X*1.22;
+		posY=-5.4+Player_Y*1.22;
+		posZ=1.5;
+		PointX=-5.4+Player_X*1.22+1.0;
+		PointY=-5.4+Player_Y*1.22+1.0;
+		PointZ=0.0;
+		UpX=0.0;
+		UpY=1.0;
+		UpZ=0.0;
+	}
+}
+
+void playerBackView()
+{
+		if(back_cam==1){
+			cout << Player_X  << endl;
+			cout << Player_Y << endl;
+			cout << Player_Z << endl;
+			posX=-5.4+Player_X*1.22+1.0;
+			posY= -5.4+Player_Y*1.22+0.5;
+			posZ=0.5;
+			PointX=-5.4+Player_X*1.22 + 1.0;
+		    PointY=-5.4+Player_Y*1.22 + 1.0;
+		    PointZ=Player_Z;
+		    UpX=0.0;
+		    UpY=2.0;
+		    UpZ=0.0;
+		}
+}
+
 void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-     // Function is called first on GLFW_PRESS.
-            	 GLfloat cameraSpeed = 0.5f;
-	    if (action == GLFW_RELEASE) {
-        switch (key) { 
-            case GLFW_KEY_RIGHT:
+     	GLfloat cameraSpeed = 0.5f;
+	    if (action == GLFW_RELEASE) 
+	    {
+        	switch (key) 
+        	{ 
+            	case GLFW_KEY_RIGHT:
             	if(((Player_X + 1) < 10) && (flag_obstacles[Player_X+1][Player_Y]!=1) && (flag[Player_X+1][Player_Y]!=1)){
             		Player_X +=1;
             		if(flag_pits[Player_X][Player_Y]==1){
@@ -247,6 +294,12 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             		else if(Player_X==9 && Player_Y==9){
             			cout << "Found U -_-" <<endl;
             		}
+            	}
+            	if(View_cam==1){
+            		playerCam();
+            	}
+            	if(back_cam==1){
+            		playerBackView();
             	}
             	break;
 			case GLFW_KEY_LEFT:
@@ -267,6 +320,12 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             			cout << "Found U -_-" <<endl;
             		}
             		}
+            		if(View_cam==1){
+            		playerCam();
+            		}
+            		if(back_cam==1){
+            		playerBackView();
+            	}
             	break;           
             case GLFW_KEY_UP:
             	if(((Player_Y + 1) < 10) && (flag_obstacles[Player_X][Player_Y+1]!=1) && (flag[Player_X][Player_Y+1]!=1)){
@@ -286,9 +345,16 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             			cout << "Found U -_-" <<endl;
             		}
             	}
+            	if(View_cam==1){
+            		playerCam();
+            	}
+            	if(back_cam==1){
+            		playerBackView();
+            	}
             	break;
             case GLFW_KEY_DOWN:
-            	if(((Player_Y ) > 0)  && (flag_obstacles[Player_X][Player_Y-1]!=1) && (flag[Player_X][Player_Y-1]!=1)){
+            	if(((Player_Y ) > 0)  && (flag_obstacles[Player_X][Player_Y-1]!=1) && (flag[Player_X][Player_Y-1]!=1))
+            	{
             		Player_Y -= 1;
             		if((flag_pits[Player_X][Player_Y]==1)){
             			Player_X=0;
@@ -305,6 +371,23 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             			cout << "Found U -_-" <<endl;
             		}
             	}
+            	 if(View_cam==1){
+            	 	playerCam();
+            	 }
+            	 if(back_cam==1){
+            	 	playerBackView();
+            	}
+            	break;
+            case GLFW_KEY_SPACE:
+            	jump_flag=1;
+            	// cout << jump_flag << endl;
+            	// cout << flag_up << endl;
+            	if(View_cam==1){
+            		playerCam();
+            	}
+            	if(back_cam==1){
+            		playerBackView();
+            	}
             	break;
             case GLFW_KEY_T:
             	posX=0.0;
@@ -316,6 +399,8 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             	UpX=0;
             	UpY=1.0;
             	UpZ=0;
+            	View_cam=0;
+            	back_cam=0;
             	break;
             case GLFW_KEY_N:
             	posX=1.0;
@@ -327,6 +412,18 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 				UpX=0.0;
 				UpY=1.0;
 				UpZ=0.0;
+				View_cam=0;
+				back_cam=0;
+            	break;
+            case GLFW_KEY_P:
+            	back_cam=0;
+            	View_cam=1;
+            	playerCam();
+            	break;
+            case GLFW_KEY_B:
+            	View_cam=0;
+            	back_cam=1;
+            	playerBackView();
             	break;
             default:
                 break;
@@ -351,8 +448,18 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
 		case 'q':
             quit(window);
             break;
-		default:
-			break;
+		    case 'z':
+    		if(zoom < 1.4)
+            	zoom+=0.009;
+                	    Matrices.projection = glm::ortho(-zoom*8.0f, zoom*8.0f, -zoom*8.0f, zoom*8.0f, -20.0f, 20.0f);
+         	   break;
+    		case 'x':
+    			if(zoom > 0.01)
+            	zoom-=0.009;
+                Matrices.projection = glm::ortho(-zoom*8.0f, zoom*8.0f, -zoom*8.0f, zoom*8.0f, -20.0f, 20.0f);
+            	break; 
+			default:
+				break;
 	}
 }
 
@@ -361,8 +468,15 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
 {
     switch (button) {
         case GLFW_MOUSE_BUTTON_LEFT:
-            if (action == GLFW_RELEASE)
-                triangle_rot_dir *= -1;
+            if (action == GLFW_PRESS){
+                isDragging=1;
+                xDragStart=posX;
+                //mouseMotion(posX, posY);
+            }
+            else{
+            	angle+=deltaAngle;
+            	isDragging=0;
+            }
             break;
         case GLFW_MOUSE_BUTTON_RIGHT:
             if (action == GLFW_RELEASE) {
@@ -374,7 +488,13 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
     }
 }
 
-
+void mouseMotion(GLFWwindow* window, double posX, double posY){
+	if(isDragging){
+		deltaAngle=(posX - xDragStart-1)*0.005;
+		ldx = -sin(angle+deltaAngle);
+		//posY = cos(angle + deltaAngle)
+	}
+}
 /* Executed when window is resized to 'width' and 'height' */
 /* Modify the bounds of the screen here in glm::ortho or Field of View in glm::Perspective */
 void reshapeWindow (GLFWwindow* window, int width, int height)
@@ -398,7 +518,7 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     // Matrices.projection = glm::perspective (fov, (GLfloat) fbwidth / (GLfloat) fbheight, 0.1f, 500.0f);
 
     // Ortho projection for 2D views
-    Matrices.projection = glm::ortho(-8.0f, 8.0f, -8.0f, 8.0f, -20.0f, 20.0f);
+    Matrices.projection = glm::ortho(-zoom*8.0f, zoom*8.0f, -zoom*8.0f, zoom*8.0f, -20.0f, 20.0f);
 }
 
 VAO *triangle, *rectangle, *cube[10][10], *player, *obstacles[10][10];
@@ -425,11 +545,8 @@ void createTriangle ()
   triangle = create3DObject(GL_TRIANGLES, 3, vertex_buffer_data, color_buffer_data, GL_LINE);
 }
 
-//GLfloat cube[4][4]; 
-
-
-
-void createPlayer(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat length, GLfloat width, GLfloat height){
+void createPlayer(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat length, GLfloat width, GLfloat height)
+{
 	GLfloat halfLen, halfWid, halfHei;
 	halfLen = 0.5*length;
 	halfWid = 0.5*width;
@@ -544,6 +661,7 @@ void createPlayer(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat len
 	};
 
 	player = create3DObject(GL_TRIANGLES, 36, vertex_value, vertex_color, GL_FILL);
+
 }
 
 void createCube(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat edgeLength, int x, int y){
@@ -725,54 +843,57 @@ void createObstacles(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat 
     GLfloat vertex_color[] = {
   //
     	0.0,0.0,0.0,
-    	0.0,0.0,1.0,
-    	1.0,1.0,1.0,
-
-    	1.0,1.0,1.0,
-    	0.0,0.3,1.0,
-    	0.4,0.0,0.0,
-//
-    	1.0,0.0,0.0,
-    	1.0,0.6,1.0,
-    	1.0,1.0,1.0,
-
-    	1.0,1.0,1.0,
-    	1.0,0.7,1.0,
-    	1.0,0.0,0.0,
-//
-    	0.0,0.0,0.5,
     	0.0,0.0,0.0,
     	0.0,0.0,0.0,
 
     	0.0,0.0,0.0,
     	0.0,0.0,0.0,
-    	0.5,0.0,0.0,
-//
-    	0.0,1.0,0.0,
-    	0.0,1.0,1.0,
-    	1.0,1.0,1.0,
-
-    	1.0,1.0,1.0,
-    	0.0,1.0,1.0,
-    	0.0,1.0,1.0,
-//
-    	0.0,0.0,3.0,
-    	0.7,1.0,0.0,
-    	0.0,1.0,1.0,
-
-    	0.0,1.0,1.0,
-    	1.0,0.0,0.0,
     	0.0,0.0,0.0,
-//
-    	0.0,0.0,0.7,
-    	0.0,0.0,1.0,
-    	0.0,1.0,1.0,
 
-    	0.1,1.0,1.0,
-    	0.3,0.3,1.0,
-    	0.0,0.9,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0,
+    	0.0,0.0,0.0
+
     };
+    
     obstacles[x][y] = create3DObject(GL_TRIANGLES, 36, vertex, vertex_color, GL_FILL);
+
 }
 
 // creating random cubes to move and all.
@@ -799,10 +920,13 @@ void random_cubes(){
  	}
 }
 
-void random_pits(){
+void random_pits()
+{
 	int count_pits=7,i,j;
-	for(i=0;i<10;i++){
-		for(j=0;j<10;j++){
+	for(i=0;i<10;i++)
+	{
+		for(j=0;j<10;j++)
+		{
 			flag_pits[i][j]=0;
 		}
 	}
@@ -836,72 +960,57 @@ float grid_flag=1;
 void draw ()
 {
 	int i,j;
-  // clear the color and depth in the frame buffer
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram (programID);
+	glm::vec3 eye ( 5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f) );
+	
+	glm::vec3 cameraPos   = glm::vec3(posX + cdx, posY + cdy, posZ + cdz);
+	glm::vec3 cameraFront = glm::vec3(PointX+ldx, PointY + ldy, PointZ + ldz);
+	glm::vec3 cameraUp    = glm::vec3(UpX + udx, UpY+ udy, UpZ + udz);
 
-  // use the loaded shader program
-  // Don't change unless you know what you are doing
-  glUseProgram (programID);
-
-  // Eye - Location of camera. Don't change unless you are sure!!
-  glm::vec3 eye ( 5*cos(camera_rotation_angle*M_PI/180.0f), 0, 5*sin(camera_rotation_angle*M_PI/180.0f) );
-  // Target - Where is the camera looking at.  Don't change unless you are sure!!
-  // glm::vec3 target (0, 0, 0);
-  // // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
-  // glm::vec3 up (0, 1, 0);
-
-
-  // Compute Camera matrix (view)
-  // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
-  //  Don't change unless you are sure!!
-	//  glm::vec3 cameraPos   = glm::vec3(1,-1.9,5.0);
-	// glm::vec3 cameraFront = glm::vec3(0,0,0);
-	// glm::vec3 cameraUp    = glm::vec3(0,1.2,0);
-	glm::vec3 cameraPos   = glm::vec3(posX, posY, posZ);
-	glm::vec3 cameraFront = glm::vec3(PointX, PointY, PointZ);
-	glm::vec3 cameraUp    = glm::vec3(UpX, UpY, UpZ);
-
- //  Matrices.view = glm::lookAt(glm::vec3(1,-1.9,5.0), glm::vec3(0,0,0), glm::vec3(0,1.2,0)); // Fixed camera for 2D (ortho) in XY plane
 	Matrices.view = glm::lookAt(cameraPos, cameraFront, cameraUp); // Fixed camera for 2D (ortho) in XY plane
+	
+	glm::mat4 Model = glm::mat4(1.0f);
+	glm::mat4 VP = Matrices.projection * Matrices.view;
+	glm::mat4 MVP;	// MVP = Projection * View * Mode
 
-  // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
-  //  Don't change unless you are sure!!
-  glm::mat4 VP = Matrices.projection * Matrices.view;
-  glm::mat4 MVP;	// MVP = Projection * View * Mode
-  
+  	for(i=0;i<10;i++)
+  	{
+  		for(j=0;j<10;j++)
+  		{
 
-  
-  for(i=0;i<10;i++){
-  	for(j=0;j<10;j++){
-
-				  Matrices.model = glm::mat4(1.0f);
-
-				  glm::mat4 translateCube = glm::translate (glm::vec3(0, 0, flag[i][j]*y));        // glTranslatef
-				  glm::mat4 rotateCube = glm::rotate((float)(cube_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
-				  Matrices.model *= (translateCube * rotateCube);
-				  MVP = VP * Matrices.model;
-				  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-	  			if(flag_pits[i][j]!=1){
+			Matrices.model = glm::mat4(1.0f);
+		    glm::mat4 translateCube = glm::translate (glm::vec3(0, 0, flag[i][j]*y));        // glTranslatef
+			glm::mat4 rotateCube = glm::rotate((float)(cube_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+			Matrices.model *= (translateCube * rotateCube);
+			MVP = VP * Matrices.model;
+			glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+	  		if(flag_pits[i][j]!=1)
+	  		{
 	  				draw3DObject(cube[i][j]);
-  				}
-  	}
-  }
+  			}
+  	    }
+    }
 
-		  if(grid_flag==1){
-		  	y+=0.01;
-		  }
-		  else if(grid_flag==0){
-		  	y-=0.01;
-		  }
+	if(grid_flag==1)
+	{
+	  	y+=0.008;
+	}
+	else if(grid_flag==0)
+	{
+	  	y-=0.008;
+	}
 
-		  if(y>=2.0){
-			grid_flag=0;
-		  }
-		  else if(y<0){
-		  	grid_flag=1;
-		  	random_cubes();
-		  	y=0;
-		}
+	if(y>=2.0)
+	{
+		grid_flag=0;
+	}
+	else if(y<0)
+	{
+	  	grid_flag=1;
+	  	random_cubes();
+	  	y=0;
+	}
 
 	for(i=0;i<10;i++){
 		for(j=0;j<10;j++){
@@ -921,7 +1030,7 @@ void draw ()
 
 	Matrices.model = glm::mat4(1.0f);
 
-	glm::mat4 translatePlayer = glm::translate (glm::vec3(-5.4+Player_X*1.22, -5.4+Player_Y*1.22, 0.0));        // glTranslatef
+	glm::mat4 translatePlayer = glm::translate (glm::vec3(-5.4+Player_X*1.22, -5.4+Player_Y*1.22, Player_Z));        // glTranslatef
 	glm::mat4 rotatePlayer = glm::rotate((float)(player_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
 	Matrices.model *= (translatePlayer * rotatePlayer);
 	MVP = VP * Matrices.model;
@@ -929,6 +1038,27 @@ void draw ()
 	draw3DObject(player);
     float increments = 1;
 	player_rotation = player_rotation + increments*player_rot_dir*player_rot_status;
+
+	if(jump_flag==1)
+	{
+		if(Player_Z <= 4.0 && flag_up==1)
+		{
+			Player_Z+=0.01;
+		}
+		else if(Player_Z>4.0)
+		{
+			flag_up=0;
+		}
+		if(Player_Z >=0.0 && flag_up==0)
+		{
+			Player_Z-=0.01;
+		}
+		else if(Player_Z < 0.0 && flag_up==0){
+			jump_flag=0;
+			flag_up=1;
+		}
+	}
+
 
 }
 
@@ -980,6 +1110,7 @@ GLFWwindow* initGLFW (int width, int height)
 
     /* Register function to handle mouse click */
     glfwSetMouseButtonCallback(window, mouseButton);  // mouse button clicks
+    glfwSetCursorPosCallback(window, mouseMotion);
 
     return window;
 }
@@ -990,32 +1121,31 @@ GLFWwindow* initGLFW (int width, int height)
 
 void initGL (GLFWwindow* window, int width, int height)
 {
-    /* Objects should be created before any other gl function and shaders */
-	// Create the models
-	// createTriangle (); // Generate the VAO, VBOs, vertices data & copy into the array buffer
-	// createRectangle ();
-	GLfloat x=-5.4f, y=-5.4f, z=0.0f;
-	// Player_X=x;
-	// Player_Y=y;
+    GLfloat x=-5.4f, y=-5.4f, z=0.0f;
 	int i,j;
 	random_pits();
-  // draw3DObject draws the VAO given to it using current MVP matrix
- 	
-	for(i=0;i<10;i++){
-		for(j=0;j<10;j++){
+  	
+  	for(i=0;i<10;i++)
+	{
+		for(j=0;j<10;j++)
+		{
 			createCube(x+1.22*i, y+j*1.22, z, 1.2f, i, j);
 		}
 	}
+	
 	int count_obstacles=7;
-	while(count_obstacles>0){
+	while(count_obstacles>0)
+	{
 		int X=rand()%10;
 		int Y=rand()%10;
-		if(flag_obstacles[X][Y]!=1 && !(X==0 && Y==0) && !(X==9 && Y==9)){
+		if(flag_obstacles[X][Y]!=1 && !(X==0 && Y==0) && !(X==9 && Y==9))
+		{
 			createObstacles(-5.4+1.22*X, -5.4+1.22*Y, 3.0, 1.0, X, Y);
 			flag_obstacles[X][Y]=1;
 			count_obstacles--;
 		}
-		else{
+		else
+		{
 			continue;
 		}
 	}
@@ -1031,7 +1161,7 @@ void initGL (GLFWwindow* window, int width, int height)
 	reshapeWindow (window, width, height);
 
     // Background color of the scene
-	glClearColor (0.0f, 0.0f, 0.0f, 0.0f); // R, G, B, A
+	glClearColor (1.0f, 1.0f, 1.0f, 0.0f); // R, G, B, A
 	glClearDepth (5.0f);
 
 	glEnable (GL_DEPTH_TEST);
@@ -1045,11 +1175,9 @@ void initGL (GLFWwindow* window, int width, int height)
 
 int main (int argc, char** argv)
 {
-	int width = 1920;
-	int height = 1920;
-
-    GLFWwindow* window = initGLFW(width, height);
-
+	width = 1920;
+	height = 1920;
+	GLFWwindow* window = initGLFW(width, height);
 	initGL (window, width, height);
 	posX=1.0;
 	posY=-1.9;
@@ -1062,27 +1190,13 @@ int main (int argc, char** argv)
 	UpZ=0.0;
 
     double last_update_time = glfwGetTime(), current_time;
-
-    /* Draw in loop */
-    while (!glfwWindowShouldClose(window)) {
-
-        // OpenGL Draw commands
-        draw();
-
-        // Swap Frame Buffer in double buffering
-        glfwSwapBuffers(window);
-
-        // Poll for Keyboard and mouse events
-        glfwPollEvents();
-
-        // Control based on time (Time based transformation like 5 degrees rotation every 0.5s)
-        // current_time = glfwGetTime(); // Time in seconds
-        // if ((current_time - last_update_time) >= 0.5) { // atleast 0.5s elapsed since last frame
-        //     // do something every 0.5 seconds ..
-        //     last_update_time = current_time;
-        // }
-    }
-
+	
+	while (!glfwWindowShouldClose(window)) 
+    {	
+    	draw();
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
     glfwTerminate();
     exit(EXIT_SUCCESS);
 }
