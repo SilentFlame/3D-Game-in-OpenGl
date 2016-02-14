@@ -24,6 +24,9 @@ float zoom=1;
 float angle=0;
 float deltaAngle = 0;
 int isDragging=0; 
+float pyramid_Z=5.1;
+int flag_pyramid=1;
+int pyramid_down=1;
 
 
 float cdx=0, cdy=0, cdz=0;
@@ -228,10 +231,13 @@ float rectangle_rot_dir = 1;
 float cube_rot_dir = 1;
 float player_rot_dir =1;
 bool player_rot_status = true;
+bool pyramid_rot_status = true;
+float pyramid_rot_dir =1;
 float cube_rotation=0;
 float triangle_rot_dir =1;
 int View_cam=0;
 int back_cam=0;
+int front_cam=0;
 float posX, posY, posZ, UpX, UpY, UpZ, PointX, PointY, PointZ;
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
@@ -270,6 +276,20 @@ void playerBackView()
 		}
 }
 
+void playerFrontView(){
+	if(front_cam==1){
+			posX=-5.4+Player_X*1.22+6.1;
+			posY= -5.4+Player_Y*1.22+2.1;
+			posZ=0.7;
+			PointX=-5.4+Player_X*1.22;
+		    PointY=-5.4+Player_Y*1.22;
+		    PointZ=Player_Z;
+		    UpX=0.0;
+		    UpY=2.0;
+		    UpZ=0.0;
+	}
+}
+
 void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 {
      	GLfloat cameraSpeed = 0.5f;
@@ -295,11 +315,19 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             			cout << "Found U -_-" <<endl;
             		}
             	}
+            	if(Player_X==9 && Player_Y==9){
+            		cout << "CONGRATULATIONS" << endl;
+            		cout << "You Won!" << endl;
+            		quit(window);
+            	}
             	if(View_cam==1){
             		playerCam();
             	}
-            	if(back_cam==1){
+            	else if(back_cam==1){
             		playerBackView();
+            	}
+            	else if(front_cam==1){
+            		playerFrontView();
             	}
             	break;
 			case GLFW_KEY_LEFT:
@@ -319,12 +347,20 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             		else if(Player_X==9 && Player_Y==9){
             			cout << "Found U -_-" <<endl;
             		}
-            		}
-            		if(View_cam==1){
+            	}
+            	if(Player_X==9 && Player_Y==9){
+            		cout << "CONGRATULATIONS" << endl;
+            		cout << "You Won!" << endl;
+            		quit(window);
+            	}
+            	if(View_cam==1){
             		playerCam();
             		}
-            		if(back_cam==1){
+            		else if(back_cam==1){
             		playerBackView();
+            	}
+            	else if(front_cam==1){
+            		playerFrontView();
             	}
             	break;           
             case GLFW_KEY_UP:
@@ -345,11 +381,19 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             			cout << "Found U -_-" <<endl;
             		}
             	}
+            	if(Player_X==9 && Player_Y==9){
+            		cout << "CONGRATULATIONS" << endl;
+            		cout << "You Won!" << endl;
+            		quit(window);
+            	}
             	if(View_cam==1){
             		playerCam();
             	}
-            	if(back_cam==1){
+            	else if(back_cam==1){
             		playerBackView();
+            	}
+            	else if(front_cam==1){
+            		playerFrontView();
             	}
             	break;
             case GLFW_KEY_DOWN:
@@ -371,11 +415,19 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             			cout << "Found U -_-" <<endl;
             		}
             	}
+            	if(Player_X==9 && Player_Y==9){
+            		cout << "CONGRATULATIONS" << endl;
+            		cout << "You Won!" << endl;
+            		quit(window);
+            	}
             	 if(View_cam==1){
             	 	playerCam();
             	 }
-            	 if(back_cam==1){
-            	 	playerBackView();
+            	 else if(back_cam==1){
+            		playerBackView();
+            	}
+            	else if(front_cam==1){
+            		playerFrontView();
             	}
             	break;
             case GLFW_KEY_SPACE:
@@ -385,8 +437,11 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             	if(View_cam==1){
             		playerCam();
             	}
-            	if(back_cam==1){
+            	else if(back_cam==1){
             		playerBackView();
+            	}
+            	else if(front_cam==1){
+            		playerFrontView();
             	}
             	break;
             case GLFW_KEY_T:
@@ -400,6 +455,7 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             	UpY=1.0;
             	UpZ=0;
             	View_cam=0;
+            	front_cam=0;
             	back_cam=0;
             	break;
             case GLFW_KEY_N:
@@ -413,17 +469,26 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
 				UpY=1.0;
 				UpZ=0.0;
 				View_cam=0;
+				front_cam=0;
 				back_cam=0;
             	break;
             case GLFW_KEY_P:
             	back_cam=0;
+            	front_cam=0;
             	View_cam=1;
             	playerCam();
             	break;
             case GLFW_KEY_B:
             	View_cam=0;
+            	front_cam=0;
             	back_cam=1;
             	playerBackView();
+            	break;
+            case GLFW_KEY_F:
+            	View_cam=0;
+            	front_cam=1;
+            	back_cam=0;
+            	playerFrontView();
             	break;
             default:
                 break;
@@ -449,7 +514,7 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
             quit(window);
             break;
 		    case 'z':
-    		if(zoom < 1.4)
+    		if(zoom < 1.7)
             	zoom+=0.009;
                 	    Matrices.projection = glm::ortho(-zoom*8.0f, zoom*8.0f, -zoom*8.0f, zoom*8.0f, -20.0f, 20.0f);
          	   break;
@@ -478,11 +543,6 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
             	isDragging=0;
             }
             break;
-        case GLFW_MOUSE_BUTTON_RIGHT:
-            if (action == GLFW_RELEASE) {
-                rectangle_rot_dir *= -1;
-            }
-            break;
         default:
             break;
     }
@@ -490,9 +550,9 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
 
 void mouseMotion(GLFWwindow* window, double posX, double posY){
 	if(isDragging){
-		deltaAngle=(posX - xDragStart-1)*0.005;
+		deltaAngle=(posX - xDragStart-1)*0.003;
 		ldx = -sin(angle+deltaAngle);
-		//posY = cos(angle + deltaAngle)
+		ldz = cos(angle + deltaAngle);
 	}
 }
 /* Executed when window is resized to 'width' and 'height' */
@@ -521,7 +581,7 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     Matrices.projection = glm::ortho(-zoom*8.0f, zoom*8.0f, -zoom*8.0f, zoom*8.0f, -20.0f, 20.0f);
 }
 
-VAO *triangle, *rectangle, *cube[10][10], *player, *obstacles[10][10];
+VAO *triangle, *rectangle, *cube[10][10], *player, *obstacles[10][10] , *pyramid;
 
 // Creates the triangle object used in this sample code
 void createTriangle ()
@@ -778,6 +838,65 @@ void createCube(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat edgeL
     cube[x][y] = create3DObject(GL_TRIANGLES, 36, vertex, vertex_color, GL_FILL);
 }
 
+void createPyramid(float l,float h)
+{
+  GLfloat pyramid_vertex_buffer_data[]={
+    l/2,l/2,0,
+    -l/2,l/2,0,
+    l/2,-l/2,0,
+    
+    l/2,-l/2,0,
+    -l/2,l/2,0,
+    l/2,l/2,0,
+
+    0,0,-h,
+    l/2,l/2,0,
+    -l/2,l/2,0,
+    
+    0,0,-h,
+    l/2,l/2,0,
+    l/2,-l/2,0,
+
+    0,0,-h,
+    -l/2,-l/2,0,
+    l/2,-l/2,0,
+
+    0,0,-h,
+    -l/2,l/2,0,
+    -l/2,-l/2,0,    
+  };
+
+  GLfloat pyramid_color_buffer_data[]={
+
+  0.0,1.0,0.0,
+  0.0,1.0,0.0,
+  0.0,1.0,0.0,
+  
+  0.0,1.0,0.0,
+  0.0,1.0,0.0,
+  0.0,1.0,0.0,
+
+  1.0,0.0,1.0,
+  1.0,0.0,1.0,
+  1.0,0.0,1.0,
+
+  0.0,0.3,1.0,
+  0.0,0.3,1.0,
+  0.0,0.3,1.0,
+
+  0.0,0.0,0.9,
+  0.0,0.0,0.9,
+  0.0,0.0,0.9,
+
+  1.0,0.7,0.9,
+  1.0,0.7,0.9,
+  1.0,0.7,0.9,
+  };
+
+  pyramid = create3DObject(GL_TRIANGLES, 18, pyramid_vertex_buffer_data, pyramid_color_buffer_data, GL_FILL);
+}
+
+
 // creating the obstacles
 void createObstacles(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat edgeLength, int x, int y){
 	GLfloat halfLen = edgeLength*0.6;
@@ -842,21 +961,21 @@ void createObstacles(GLfloat centerX, GLfloat centerY, GLfloat centerZ, GLfloat 
 
     GLfloat vertex_color[] = {
   //
-    	0.0,0.0,0.0,
-    	0.0,0.0,0.0,
-    	0.0,0.0,0.0,
+    	1.0,0.0,0.0,
+    	1.0,0.0,0.0,
+    	1.0,0.0,0.0,
 
-    	0.0,0.0,0.0,
-    	0.0,0.0,0.0,
-    	0.0,0.0,0.0,
+    	1.0,0.0,0.0,
+    	1.0,0.0,0.0,
+    	1.0,0.0,0.0,
 
-    	0.0,0.0,0.0,
-    	0.0,0.0,0.0,
-    	0.0,0.0,0.0,
+    	0.0,1.0,0.0,
+    	0.0,1.0,0.0,
+    	0.0,1.0,0.0,
 
-    	0.0,0.0,0.0,
-    	0.0,0.0,0.0,
-    	0.0,0.0,0.0,
+    	0.0,1.0,0.0,
+    	0.0,1.0,0.0,
+    	0.0,1.0,0.0,
 
     	0.0,0.0,0.0,
     	0.0,0.0,0.0,
@@ -949,6 +1068,8 @@ float camera_rotation_angle = 90;
 float rectangle_rotation = 0;
 float triangle_rotation = 0;
 float obstacles_rotation = 0;
+float pyramid_rotation =0;
+
 
 
 /* Render the scene with openGL */
@@ -1036,14 +1157,13 @@ void draw ()
 	MVP = VP * Matrices.model;
 	glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 	draw3DObject(player);
-    float increments = 1;
-	player_rotation = player_rotation + increments*player_rot_dir*player_rot_status;
+    
 
 	if(jump_flag==1)
 	{
 		if(Player_Z <= 4.0 && flag_up==1)
 		{
-			Player_Z+=0.01;
+			Player_Z+=0.06;
 		}
 		else if(Player_Z>4.0)
 		{
@@ -1051,13 +1171,47 @@ void draw ()
 		}
 		if(Player_Z >=0.0 && flag_up==0)
 		{
-			Player_Z-=0.01;
+			Player_Z-=0.06;
 		}
 		else if(Player_Z < 0.0 && flag_up==0){
 			jump_flag=0;
 			flag_up=1;
 		}
 	}
+
+
+Matrices.model = glm::mat4(1.0f);
+
+	glm::mat4 translatePyramid = glm::translate (glm::vec3(5.55, 5.55, pyramid_Z));        // glTranslatef
+	glm::mat4 rotatePyramid = glm::rotate((float)(pyramid_rotation*M_PI/180.0f), glm::vec3(0,0,1)); // rotate about vector (-1,1,1)
+	Matrices.model *= (translatePyramid * rotatePyramid);
+	MVP = VP * Matrices.model;
+	glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+	draw3DObject(pyramid);
+
+	if(flag_pyramid==1){
+		if(pyramid_down==1 && pyramid_Z>=2.5){
+			pyramid_Z-=0.04;
+		}
+		else if(pyramid_Z<2.5){
+			pyramid_down=0;
+		}
+		if(pyramid_down==0 && pyramid_Z<=5.3){
+			pyramid_Z+=0.04;
+		}
+		else if(pyramid_Z>5.3){
+			pyramid_down=1;
+		}
+	}
+
+
+
+
+
+	float increments = 1;
+	player_rotation = player_rotation + increments*player_rot_dir*player_rot_status;
+	//pyramid_rotation=pyramid_rotation+3.0*pyramid_rot_dir*pyramid_rot_status;
+
 
 
 }
@@ -1149,19 +1303,20 @@ void initGL (GLFWwindow* window, int width, int height)
 			continue;
 		}
 	}
-	createPlayer(0, 0, 4.62, 0.8, 0.8, 2.0);
+	createPlayer(0, 0, 4.62, 0.8, 0.8, 1.0);
 	random_cubes();
+	createPyramid(1.0, 0.8);
 
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
 	// Get a handle for our "MVP" uniform
 	Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
 
-	
+
 	reshapeWindow (window, width, height);
 
     // Background color of the scene
-	glClearColor (1.0f, 1.0f, 1.0f, 0.0f); // R, G, B, A
+	glClearColor (0.0f, 0.5f, 1.0f, 0.0f); // R, G, B, A
 	glClearDepth (5.0f);
 
 	glEnable (GL_DEPTH_TEST);
