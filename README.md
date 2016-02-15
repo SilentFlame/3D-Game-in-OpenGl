@@ -64,7 +64,7 @@ Linux - Dependencies: (alternative)
 
 ## Controls ##
 
-- CONTROLS
+- CONTROLS  
 1.Press UP and DOWN arrow keys to move the player up and down the grid block.  
 2.Press RIGHT and LEFT arrow keys to move the player right and left in the grid block.  
 3.ZoomIN and ZoomOUT in current view by "X" and "Z".  
